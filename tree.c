@@ -50,8 +50,8 @@ void aux_print_tree(tree_t *t, int spaces) {
 	if (t == NULL) return;
 
 	/* indenting for visual effects */
-	for (int i=0; i<spaces; i++)
-		fprintf( stderr, " " );
+	for (int i = 0; i < spaces; i++)
+		fprintf(stderr, " ");
 
 	switch( t->type ) {
 		case RELOP:
@@ -70,7 +70,7 @@ void aux_print_tree(tree_t *t, int spaces) {
 			aux_print_tree(t->right, spaces + 4);
 			break;
 		case ID:
-			fprintf(stderr, "[ID:%s]\n", t->attribute.sval);
+			fprintf(stderr, "[ID:%s]\n", t->attribute.sval->name);
 			break;
 		case INUM:
 			fprintf( stderr, "[INUM:%d]\n", t->attribute.ival);

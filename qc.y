@@ -11,6 +11,9 @@
 list_t *id_ptr;
 scope_t  *top_scope;
 
+int yylex();
+int yyerror(const char*);
+
 %}
 
 %union {
@@ -62,8 +65,15 @@ scope_t  *top_scope;
 %type <tval> simple_expression
 %type <tval> term
 %type <tval> factor
-%%
+%type <tval> parameter_list
+%type <tval> compound_statement
+%type <tval> statement_list
+%type <tval> statement
+%type <tval> matched_statement
+%type <tval> unmatched_statement
+%type <tval> optional_statements
 
+%%
 program: DEF ID '(' identifier_list ')' ';'
 	declarations
 	subprogram_declarations
@@ -94,6 +104,11 @@ type: standard_type {$$ = $1;}
 	;
 
 range: INUM '.' '.' INUM
+	{ if ($1 > $4) {
+		fprintf(stderr, "ERROR: range lower bound greater than upper bound.\n");
+		exit(1);
+	}
+	}
 	;
 
 standard_type: INTEGRAL {$$ = INTEGRAL;}
@@ -119,10 +134,13 @@ subprogram_header: FUNC ID arguments ':' standard_type ';'
 		id_ptr->type = $5;
 		top_scope = scope_push(top_scope); /* Create a new scope */
 		scope_insert(top_scope, $2);
+		make_tree(FUNC, make_id(semantic_lookup(top_scope, $2)), $3); /* create a tree for the function header */
 	}
 	| PROC ID {
 		id_ptr = scope_insert(top_scope, $2); /* record procedure ID in current scope */
 		top_scope = scope_push(top_scope);  /* create a new scope */
+		scope_insert(top_scope, $2);
+		make_tree(PROC, make_id(semantic_lookup(top_scope, $2)), NULL); /* create a tree for the procedure header */
 	}
 	
 	arguments ';'
@@ -140,22 +158,26 @@ parameter_list: identifier_list ':' type
 
 /* ensure all below have trees */
 
-compound_statement: /* empty */
+compound_statement:
 	BBEGIN
 		optional_statements
 	END
+	{ $$ = $2;}
 	;
 
 optional_statements: statement_list
+	{ $$ = $1; }
 	| /* empty */
+	{ $$ = NULL; }
 	;
 
 statement_list: statement
 	{$$ = $1;}
 	| statement_list ';' statement
-	{make_tree(LIST, $1, $3);}
+		{make_tree(LIST, $1, $3);}
+	;
 
-//ALL BELOW NEED SEMANTICS
+/*ALL BELOW NEED SEMANTICS */
 
 statement: matched_statement
 	{ $$ = $1;}
@@ -165,23 +187,32 @@ statement: matched_statement
 
 matched_statement: 
 		IF expression THEN matched_statement ELSE matched_statement
+		 { 
+			$$ = make_tree(THEN, $4, $6);
+			$$ = make_tree(IF, $2, $$);
+		 } 
 		| variable ASSIGNOP expression
 		{ 
 			if (type_of($1) != type_of($3)) {
 				fprintf(stderr, "ERROR: type mismatch in assignment statement.\n");
 				exit(1);
 			}
+			$$ = make_tree(ASSIGNOP, $1, $3);
 			
 		}
 	| procedure_statement
 	| compound_statement
 	| WHILE expression DO statement
+	{ $$ = make_tree(WHILE, $2, $4); }
 	;
 
 unmatched_statement: IF expression THEN statement
 		{ $$ = make_tree(IF, $2, $4); }
 	| IF expression THEN matched_statement ELSE unmatched_statement
-		{ make_tree(IF, $2, $4); 	
+		{ 
+			$$ = make_tree(THEN, $4, $6);
+			$$ = make_tree(IF, $2, $$);
+		}
 	;
 
 variable: ID
@@ -213,15 +244,29 @@ expression: simple_expression
 simple_expression: term
 		{$$ = $1;}
 	| ADDOP term
-		{$$ = make_tree(ADDOP, $2, NULL); $$->attribute.opval = $1;}
+		{
+			$$ = make_tree(ADDOP, $2, NULL); 
+			$$->attribute.opval = $1;
+		}
 	| simple_expression ADDOP term
-		{$$ = make_tree(ADDOP, $1, $3); $$->attribute.opval = $2;}
+		{
+			if (type_of($1) != type_of($3)) {
+				fprintf(stderr, "ERROR: type mismatch in simple expression.\n");
+				exit(1);
+			}
+			$$ = make_tree(ADDOP, $1, $3); 
+			$$->attribute.opval = $2;
+		}
 	;
 
 term: factor
 		{$$ = $1;}
 	| term MULOP factor
 		{
+			if (type_of($1) != type_of($3)) {
+				fprintf(stderr, "ERROR: type mismatch in term.\n");
+				exit(1);
+			}
 			$$ = make_tree(MULOP, $1, $3);
 			$$->attribute.opval = $2;
 		}
@@ -234,10 +279,10 @@ factor: ID
 		/* {
 			id_ptr = global_scope_search(top_scope, $1);
 			if (id_ptr == NULL) {
-				fprintf(stderr, "ERROR: name(%s) used but never defined.\n, $1);
+				fprintf(stderr, "ERROR: name(%s) used but never defined.\n", $1);
 			}
 			$$ = make_id(global_scope_search(top_scope, $1));
-		}*/
+		} */
 	| ID '(' expression_list ')'
 		{$$ = make_tree(FUNCTION_CALL, make_id(global_scope_search(top_scope, $1)), $3);}
 	| ID '[' expression ']'
@@ -254,7 +299,7 @@ factor: ID
 
 %%
 
-main() {
+int main() {
 	top_scope = scope_push(top_scope);
 	yyparse();
 }
