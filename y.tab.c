@@ -618,12 +618,12 @@ static const yytype_int8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,    83,    83,    90,    99,   110,   115,   118,   119,   123,
-     133,   134,   137,   138,   142,   149,   158,   158,   168,   169,
-     172,   174,   181,   187,   190,   193,   195,   201,   203,   208,
-     213,   222,   223,   224,   226,   228,   235,   237,   244,   248,
-     258,   260,   264,   266,   270,   272,   276,   278,   283,   294,
-     296,   307,   318,   320,   328,   330,   332,   334
+       0,    83,    83,    90,    99,   110,   114,   117,   118,   122,
+     132,   133,   136,   137,   141,   148,   160,   160,   174,   175,
+     178,   180,   187,   193,   196,   199,   201,   207,   209,   214,
+     219,   228,   229,   230,   232,   234,   241,   243,   250,   254,
+     264,   266,   270,   272,   276,   278,   282,   284,   289,   300,
+     302,   313,   324,   326,   334,   336,   338,   340
 };
 #endif
 
@@ -1529,27 +1529,26 @@ yyreduce:
 
   case 5:
 #line 111 "qc.y"
-                { 
-
+                {
 			semantic_set_type((yyvsp[-3].tval), (yyvsp[-1].ival)); 
 		}
-#line 1537 "y.tab.c"
+#line 1536 "y.tab.c"
     break;
 
   case 7:
-#line 118 "qc.y"
+#line 117 "qc.y"
                     {(yyval.ival) = (yyvsp[0].ival);}
-#line 1543 "y.tab.c"
+#line 1542 "y.tab.c"
     break;
 
   case 8:
-#line 120 "qc.y"
+#line 119 "qc.y"
                 { (yyval.ival) = -1; }
-#line 1549 "y.tab.c"
+#line 1548 "y.tab.c"
     break;
 
   case 9:
-#line 124 "qc.y"
+#line 123 "qc.y"
         { 
 		if ((yyvsp[-3].ival) > (yyvsp[0].ival)) {
 			fprintf(stderr, "ERROR: range lower bound greater than upper bound.\n");
@@ -1557,116 +1556,123 @@ yyreduce:
 		}
 		make_tree(RANGE, make_inum((yyvsp[-3].ival)), make_inum((yyvsp[0].ival)));
 	}
-#line 1561 "y.tab.c"
+#line 1560 "y.tab.c"
     break;
 
   case 10:
-#line 133 "qc.y"
+#line 132 "qc.y"
                         {(yyval.ival) = INTEGRAL;}
-#line 1567 "y.tab.c"
+#line 1566 "y.tab.c"
     break;
 
   case 11:
-#line 134 "qc.y"
+#line 133 "qc.y"
                    {(yyval.ival) = RATIONAL;}
-#line 1573 "y.tab.c"
+#line 1572 "y.tab.c"
     break;
 
   case 14:
-#line 146 "qc.y"
+#line 145 "qc.y"
         { top_scope = scope_pop(top_scope); }
-#line 1579 "y.tab.c"
+#line 1578 "y.tab.c"
     break;
 
   case 15:
-#line 150 "qc.y"
+#line 149 "qc.y"
         {
-		semantic_lookup(top_scope, (yyvsp[-4].sval));
+		if (scope_search(top_scope, (yyvsp[-4].sval)) != NULL) {
+			fprintf(stderr, "ERROR: ID %s already declared in this scope.\n", (yyvsp[-4].sval));
+			exit(1);
+		}
 		id_ptr = scope_insert(top_scope, (yyvsp[-4].sval)); /* record function ID in current scope */
 		id_ptr->type = (yyvsp[-1].ival);
 		top_scope = scope_push(top_scope); /* Create a new scope */
 		scope_insert(top_scope, (yyvsp[-4].sval));
 		//make_tree(FUNC, make_id(semantic_lookup(top_scope, $2)), $3); /* create a tree for the function header */
 	}
-#line 1592 "y.tab.c"
+#line 1594 "y.tab.c"
     break;
 
   case 16:
-#line 158 "qc.y"
+#line 160 "qc.y"
                   {
+		if (scope_search(top_scope, (yyvsp[0].sval)) != NULL) {
+			fprintf(stderr, "ERROR: ID %s already declared in this scope.\n", (yyvsp[0].sval));
+			exit(1);
+		}
 		id_ptr = scope_insert(top_scope, (yyvsp[0].sval)); /* record procedure ID in current scope */
 		top_scope = scope_push(top_scope);  /* create a new scope */
 		scope_insert(top_scope, (yyvsp[0].sval));
 		//make_tree(PROC, make_id(semantic_lookup(top_scope, $2)), NULL); /* create a tree for the procedure header */
 	}
-#line 1603 "y.tab.c"
-    break;
-
-  case 20:
-#line 173 "qc.y"
-                {semantic_set_type((yyvsp[-2].tval), (yyvsp[0].ival)); (yyval.tval) = (yyvsp[-2].tval);}
 #line 1609 "y.tab.c"
     break;
 
-  case 21:
-#line 175 "qc.y"
+  case 20:
+#line 179 "qc.y"
                 {semantic_set_type((yyvsp[-2].tval), (yyvsp[0].ival)); (yyval.tval) = (yyvsp[-2].tval);}
 #line 1615 "y.tab.c"
     break;
 
-  case 22:
-#line 184 "qc.y"
-        { (yyval.tval) = (yyvsp[-1].tval);}
+  case 21:
+#line 181 "qc.y"
+                {semantic_set_type((yyvsp[-2].tval), (yyvsp[0].ival)); (yyval.tval) = (yyvsp[-2].tval);}
 #line 1621 "y.tab.c"
     break;
 
-  case 23:
-#line 188 "qc.y"
-        { (yyval.tval) = (yyvsp[0].tval); }
+  case 22:
+#line 190 "qc.y"
+        { (yyval.tval) = (yyvsp[-1].tval);}
 #line 1627 "y.tab.c"
     break;
 
-  case 24:
-#line 190 "qc.y"
-        { (yyval.tval) = NULL; }
+  case 23:
+#line 194 "qc.y"
+        { (yyval.tval) = (yyvsp[0].tval); }
 #line 1633 "y.tab.c"
     break;
 
-  case 25:
-#line 194 "qc.y"
-        {(yyval.tval) = (yyvsp[0].tval);}
+  case 24:
+#line 196 "qc.y"
+        { (yyval.tval) = NULL; }
 #line 1639 "y.tab.c"
     break;
 
-  case 26:
-#line 196 "qc.y"
-                {make_tree(LIST, (yyvsp[-2].tval), (yyvsp[0].tval));}
+  case 25:
+#line 200 "qc.y"
+        {(yyval.tval) = (yyvsp[0].tval);}
 #line 1645 "y.tab.c"
     break;
 
-  case 27:
+  case 26:
 #line 202 "qc.y"
-        { (yyval.tval) = (yyvsp[0].tval);}
+                {make_tree(LIST, (yyvsp[-2].tval), (yyvsp[0].tval));}
 #line 1651 "y.tab.c"
     break;
 
-  case 28:
-#line 204 "qc.y"
-        {(yyval.tval) = (yyvsp[0].tval);}
+  case 27:
+#line 208 "qc.y"
+        { (yyval.tval) = (yyvsp[0].tval);}
 #line 1657 "y.tab.c"
     break;
 
+  case 28:
+#line 210 "qc.y"
+        {(yyval.tval) = (yyvsp[0].tval);}
+#line 1663 "y.tab.c"
+    break;
+
   case 29:
-#line 209 "qc.y"
+#line 215 "qc.y"
                  { 
 			(yyval.tval) = make_tree(THEN, (yyvsp[-2].tval), (yyvsp[0].tval));
 			(yyval.tval) = make_tree(IF, (yyvsp[-4].tval), (yyval.tval));
 		 }
-#line 1666 "y.tab.c"
+#line 1672 "y.tab.c"
     break;
 
   case 30:
-#line 214 "qc.y"
+#line 220 "qc.y"
                 { 
 			if (type_of((yyvsp[-2].tval)) != type_of((yyvsp[0].tval))) {
 				fprintf(stderr, "ERROR: type mismatch in assignment statement.\n");
@@ -1675,55 +1681,55 @@ yyreduce:
 			(yyval.tval) = make_tree(ASSIGNOP, (yyvsp[-2].tval), (yyvsp[0].tval));
 			
 		}
-#line 1679 "y.tab.c"
-    break;
-
-  case 33:
-#line 225 "qc.y"
-        { (yyval.tval) = make_tree(WHILE, (yyvsp[-2].tval), (yyvsp[0].tval)); }
 #line 1685 "y.tab.c"
     break;
 
-  case 34:
-#line 227 "qc.y"
-        { (yyval.tval) = make_tree(REPEAT, (yyvsp[-2].tval), (yyvsp[0].tval)); }
+  case 33:
+#line 231 "qc.y"
+        { (yyval.tval) = make_tree(WHILE, (yyvsp[-2].tval), (yyvsp[0].tval)); }
 #line 1691 "y.tab.c"
     break;
 
+  case 34:
+#line 233 "qc.y"
+        { (yyval.tval) = make_tree(REPEAT, (yyvsp[-2].tval), (yyvsp[0].tval)); }
+#line 1697 "y.tab.c"
+    break;
+
   case 35:
-#line 229 "qc.y"
+#line 235 "qc.y"
         { 
 		(yyval.tval) = make_tree(ASSIGNOP, make_id(semantic_lookup(top_scope, (yyvsp[-4].sval))), (yyvsp[-2].tval)); /* create tree for assignment statement */
 		(yyval.tval) = make_tree(FOR, (yyval.tval), (yyvsp[0].tval));
 	}
-#line 1700 "y.tab.c"
-    break;
-
-  case 36:
-#line 236 "qc.y"
-                { (yyval.tval) = make_tree(IF, (yyvsp[-2].tval), (yyvsp[0].tval)); }
 #line 1706 "y.tab.c"
     break;
 
+  case 36:
+#line 242 "qc.y"
+                { (yyval.tval) = make_tree(IF, (yyvsp[-2].tval), (yyvsp[0].tval)); }
+#line 1712 "y.tab.c"
+    break;
+
   case 37:
-#line 238 "qc.y"
+#line 244 "qc.y"
                 { 
 			(yyval.tval) = make_tree(THEN, (yyvsp[-2].tval), (yyvsp[0].tval));
 			(yyval.tval) = make_tree(IF, (yyvsp[-4].tval), (yyval.tval));
 		}
-#line 1715 "y.tab.c"
+#line 1721 "y.tab.c"
     break;
 
   case 38:
-#line 245 "qc.y"
+#line 251 "qc.y"
                 {
 			(yyval.tval) = make_id(semantic_lookup(top_scope, (yyvsp[0].sval)));
 		}
-#line 1723 "y.tab.c"
+#line 1729 "y.tab.c"
     break;
 
   case 39:
-#line 249 "qc.y"
+#line 255 "qc.y"
                 { 
 			if (type_of((yyvsp[-1].tval)) != INTEGRAL) {
 				fprintf(stderr, "ERROR: array index must be an integer.\n");
@@ -1731,62 +1737,62 @@ yyreduce:
 			}
 			(yyval.tval) = make_tree(ARRAY_ACCESS, make_id(semantic_lookup(top_scope, (yyvsp[-3].sval))), (yyvsp[-1].tval));
 		}
-#line 1735 "y.tab.c"
-    break;
-
-  case 40:
-#line 259 "qc.y"
-                { (yyval.tval) = make_id(semantic_lookup(top_scope, (yyvsp[0].sval))); }
 #line 1741 "y.tab.c"
     break;
 
-  case 41:
-#line 261 "qc.y"
-                { (yyval.tval) = make_tree(PROC, make_id(semantic_lookup(top_scope, (yyvsp[-3].sval))), (yyvsp[-1].tval));}
+  case 40:
+#line 265 "qc.y"
+                { (yyval.tval) = make_id(semantic_lookup(top_scope, (yyvsp[0].sval))); }
 #line 1747 "y.tab.c"
     break;
 
-  case 42:
-#line 265 "qc.y"
-                {(yyval.tval) = (yyvsp[0].tval);}
+  case 41:
+#line 267 "qc.y"
+                { (yyval.tval) = make_tree(PROC, make_id(semantic_lookup(top_scope, (yyvsp[-3].sval))), (yyvsp[-1].tval));}
 #line 1753 "y.tab.c"
     break;
 
-  case 43:
-#line 267 "qc.y"
-                {(yyval.tval) = make_tree(LIST, (yyvsp[-2].tval), (yyvsp[0].tval));}
+  case 42:
+#line 271 "qc.y"
+                {(yyval.tval) = (yyvsp[0].tval);}
 #line 1759 "y.tab.c"
     break;
 
-  case 44:
-#line 271 "qc.y"
-                {(yyval.tval) = (yyvsp[0].tval);}
+  case 43:
+#line 273 "qc.y"
+                {(yyval.tval) = make_tree(LIST, (yyvsp[-2].tval), (yyvsp[0].tval));}
 #line 1765 "y.tab.c"
     break;
 
-  case 45:
-#line 273 "qc.y"
-                {(yyval.tval) = make_tree(RELOP, (yyvsp[-2].tval), (yyvsp[0].tval)); (yyval.tval)->attribute.opval = (yyvsp[-1].opval);}
+  case 44:
+#line 277 "qc.y"
+                {(yyval.tval) = (yyvsp[0].tval);}
 #line 1771 "y.tab.c"
     break;
 
-  case 46:
-#line 277 "qc.y"
-                {(yyval.tval) = (yyvsp[0].tval);}
+  case 45:
+#line 279 "qc.y"
+                {(yyval.tval) = make_tree(RELOP, (yyvsp[-2].tval), (yyvsp[0].tval)); (yyval.tval)->attribute.opval = (yyvsp[-1].opval);}
 #line 1777 "y.tab.c"
     break;
 
+  case 46:
+#line 283 "qc.y"
+                {(yyval.tval) = (yyvsp[0].tval);}
+#line 1783 "y.tab.c"
+    break;
+
   case 47:
-#line 279 "qc.y"
+#line 285 "qc.y"
                 {
 			(yyval.tval) = make_tree(ADDOP, (yyvsp[0].tval), NULL); 
 			(yyval.tval)->attribute.opval = (yyvsp[-1].opval);
 		}
-#line 1786 "y.tab.c"
+#line 1792 "y.tab.c"
     break;
 
   case 48:
-#line 284 "qc.y"
+#line 290 "qc.y"
                 {
 			if (type_of((yyvsp[-2].tval)) != type_of((yyvsp[0].tval))) {
 				fprintf(stderr, "ERROR: type mismatch in simple expression.\n");
@@ -1795,17 +1801,17 @@ yyreduce:
 			(yyval.tval) = make_tree(ADDOP, (yyvsp[-2].tval), (yyvsp[0].tval)); 
 			(yyval.tval)->attribute.opval = (yyvsp[-1].opval);
 		}
-#line 1799 "y.tab.c"
-    break;
-
-  case 49:
-#line 295 "qc.y"
-                {(yyval.tval) = (yyvsp[0].tval);}
 #line 1805 "y.tab.c"
     break;
 
+  case 49:
+#line 301 "qc.y"
+                {(yyval.tval) = (yyvsp[0].tval);}
+#line 1811 "y.tab.c"
+    break;
+
   case 50:
-#line 297 "qc.y"
+#line 303 "qc.y"
                 {
 			if (type_of((yyvsp[-2].tval)) != type_of((yyvsp[0].tval))) {
 				fprintf(stderr, "ERROR: type mismatch in term.\n");
@@ -1814,25 +1820,25 @@ yyreduce:
 			(yyval.tval) = make_tree(MULOP, (yyvsp[-2].tval), (yyvsp[0].tval));
 			(yyval.tval)->attribute.opval = (yyvsp[-1].opval);
 		}
-#line 1818 "y.tab.c"
+#line 1824 "y.tab.c"
     break;
 
   case 51:
-#line 308 "qc.y"
+#line 314 "qc.y"
         {
 		(yyval.tval) = make_id(semantic_lookup(top_scope, (yyvsp[0].sval)));
 	}
-#line 1826 "y.tab.c"
-    break;
-
-  case 52:
-#line 319 "qc.y"
-                {(yyval.tval) = make_tree(FUNCTION_CALL, make_id(global_scope_search(top_scope, (yyvsp[-3].sval))), (yyvsp[-1].tval));}
 #line 1832 "y.tab.c"
     break;
 
+  case 52:
+#line 325 "qc.y"
+                {(yyval.tval) = make_tree(FUNCTION_CALL, make_id(global_scope_search(top_scope, (yyvsp[-3].sval))), (yyvsp[-1].tval));}
+#line 1838 "y.tab.c"
+    break;
+
   case 53:
-#line 321 "qc.y"
+#line 327 "qc.y"
                 {
 			if (type_of((yyvsp[-1].tval)) != INTEGRAL) {
 				fprintf(stderr, "ERROR: array index must be an integer.\n");
@@ -1840,35 +1846,35 @@ yyreduce:
 			}
 			(yyval.tval) = make_tree(ARRAY_ACCESS, make_id(global_scope_search(top_scope, (yyvsp[-3].sval))), (yyvsp[-1].tval));
 		}
-#line 1844 "y.tab.c"
-    break;
-
-  case 54:
-#line 329 "qc.y"
-                {(yyval.tval) = make_inum((yyvsp[0].ival));}
 #line 1850 "y.tab.c"
     break;
 
-  case 55:
-#line 331 "qc.y"
-                {(yyval.tval) = make_rnum((yyvsp[0].rval));}
+  case 54:
+#line 335 "qc.y"
+                {(yyval.tval) = make_inum((yyvsp[0].ival));}
 #line 1856 "y.tab.c"
     break;
 
-  case 56:
-#line 333 "qc.y"
-                {(yyval.tval) = (yyvsp[-1].tval);}
+  case 55:
+#line 337 "qc.y"
+                {(yyval.tval) = make_rnum((yyvsp[0].rval));}
 #line 1862 "y.tab.c"
     break;
 
-  case 57:
-#line 335 "qc.y"
-                {(yyval.tval) = make_tree(NOT, (yyvsp[0].tval), NULL);}
+  case 56:
+#line 339 "qc.y"
+                {(yyval.tval) = (yyvsp[-1].tval);}
 #line 1868 "y.tab.c"
     break;
 
+  case 57:
+#line 341 "qc.y"
+                {(yyval.tval) = make_tree(NOT, (yyvsp[0].tval), NULL);}
+#line 1874 "y.tab.c"
+    break;
 
-#line 1872 "y.tab.c"
+
+#line 1878 "y.tab.c"
 
       default: break;
     }
@@ -2100,7 +2106,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 338 "qc.y"
+#line 344 "qc.y"
 
 
 int main() {

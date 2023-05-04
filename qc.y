@@ -147,6 +147,10 @@ subprogram_declaration:
 
 subprogram_header: FUNC ID arguments ':' standard_type ';'
 	{
+		if (scope_search(top_scope, $2) != NULL) {
+			fprintf(stderr, "ERROR: ID %s already declared in this scope.\n", $2);
+			exit(1);
+		}
 		id_ptr = scope_insert(top_scope, $2); /* record function ID in current scope */
 		id_ptr->type = $5;
 		top_scope = scope_push(top_scope); /* Create a new scope */
@@ -154,6 +158,10 @@ subprogram_header: FUNC ID arguments ':' standard_type ';'
 		//make_tree(FUNC, make_id(semantic_lookup(top_scope, $2)), $3); /* create a tree for the function header */
 	}
 	| PROC ID {
+		if (scope_search(top_scope, $2) != NULL) {
+			fprintf(stderr, "ERROR: ID %s already declared in this scope.\n", $2);
+			exit(1);
+		}
 		id_ptr = scope_insert(top_scope, $2); /* record procedure ID in current scope */
 		top_scope = scope_push(top_scope);  /* create a new scope */
 		scope_insert(top_scope, $2);
