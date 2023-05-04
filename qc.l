@@ -8,13 +8,14 @@
 
 %}
 
+%option yylineno
 identifier [a-zA-Z][a-zA-Z0-9]*
 number [0-9]+
 whitespace [ \t]+
 
 %%
-"{".*"}"		{;}
-"(*".*"*)"		{;}
+"{"[^"}"]*"}"		{;}
+"(*"[^"*}"]*"*)"    {;}
 "def"			{fprintf(stderr, "[DEF]"); return DEF;}
 "proc"			{fprintf(stderr, "[PROC]"); return PROC;}
 "func"			{fprintf(stderr, "[FUNC]"); return FUNC;}
@@ -29,6 +30,9 @@ whitespace [ \t]+
 "then"			{fprintf(stderr, "[THEN]"); return THEN;}
 "else"			{fprintf(stderr, "[ELSE]"); return ELSE;}
 "while"			{fprintf(stderr, "[WHILE]"); return WHILE;}
+"repeat"		{fprintf(stderr, "[REPEAT]"); return REPEAT;}
+"until"			{fprintf(stderr, "[UNTIL]"); return UNTIL;}
+"for"			{fprintf(stderr, "[FOR]"); return FOR;}
 "do"			{fprintf(stderr, "[DO]"); return DO;}
 "<" 			{fprintf(stderr, "[RELOP:%d]", yylval.opval = LT); return RELOP;}
 "<=" 			{fprintf(stderr, "[RELOP:%d]", yylval.opval = LE); return RELOP;}
@@ -62,8 +66,7 @@ whitespace [ \t]+
 
 %%
 
-int yyerror(char *message) {
-
-	fprintf(stderr, "Shia: %s\n", message);
+int yyerror(char *message) {	
+	fprintf(stderr, "ERROR [line:%d]: %s\n", yylineno, message);
 	exit(1);
 }

@@ -49,6 +49,11 @@ int yyerror(const char*);
 
 %token FUNCTION_CALL ARRAY_ACCESS
 %token LIST
+%token RANGE
+%token FOR
+%token REPEAT
+%token UNTIL
+
 
 %token <sval> ID
 %token <ival> INUM
@@ -72,6 +77,7 @@ int yyerror(const char*);
 %type <tval> matched_statement
 %type <tval> unmatched_statement
 %type <tval> optional_statements
+%type <tval> range
 
 %%
 program: DEF ID '(' identifier_list ')' ';'
@@ -82,19 +88,29 @@ program: DEF ID '(' identifier_list ')' ';'
 	;
 
 identifier_list: ID
-		{ 
+		{
+			if (scope_search(top_scope, $1) != NULL) {
+				fprintf(stderr, "ERROR: ID %s already declared in this scope.\n", $1);
+				exit(1);
+			}
 			id_ptr = scope_insert(top_scope, $1); 
 			$$ = make_id(id_ptr);
 		}
 	| identifier_list ',' ID
 		{ 
-			scope_insert(top_scope, $3); 
+			if (scope_search(top_scope, $3) != NULL) {
+				fprintf(stderr, "ERROR: ID %s already declared in this scope.\n", $3);
+				exit(1);
+			}
+			id_ptr = scope_insert(top_scope, $3);
 			$$ = make_tree(LIST, $1, make_id(id_ptr));
 		}
 	;
 
 declarations: declarations VAR identifier_list ':' type ';'
-		{ semantic_set_type($3, $5); }
+		{
+			semantic_set_type($3, $5); 
+		}
 	| /* empty */
 	;
 
@@ -104,10 +120,12 @@ type: standard_type {$$ = $1;}
 	;
 
 range: INUM '.' '.' INUM
-	{ if ($1 > $4) {
-		fprintf(stderr, "ERROR: range lower bound greater than upper bound.\n");
-		exit(1);
-	}
+	{ 
+		if ($1 > $4) {
+			fprintf(stderr, "ERROR: range lower bound greater than upper bound.\n");
+			exit(1);
+		}
+		make_tree(RANGE, make_inum($1), make_inum($4));
 	}
 	;
 
@@ -129,18 +147,17 @@ subprogram_declaration:
 
 subprogram_header: FUNC ID arguments ':' standard_type ';'
 	{
-		
 		id_ptr = scope_insert(top_scope, $2); /* record function ID in current scope */
 		id_ptr->type = $5;
 		top_scope = scope_push(top_scope); /* Create a new scope */
 		scope_insert(top_scope, $2);
-		make_tree(FUNC, make_id(semantic_lookup(top_scope, $2)), $3); /* create a tree for the function header */
+		//make_tree(FUNC, make_id(semantic_lookup(top_scope, $2)), $3); /* create a tree for the function header */
 	}
 	| PROC ID {
 		id_ptr = scope_insert(top_scope, $2); /* record procedure ID in current scope */
 		top_scope = scope_push(top_scope);  /* create a new scope */
 		scope_insert(top_scope, $2);
-		make_tree(PROC, make_id(semantic_lookup(top_scope, $2)), NULL); /* create a tree for the procedure header */
+		//make_tree(PROC, make_id(semantic_lookup(top_scope, $2)), NULL); /* create a tree for the procedure header */
 	}
 	
 	arguments ';'
@@ -204,6 +221,13 @@ matched_statement:
 	| compound_statement
 	| WHILE expression DO statement
 	{ $$ = make_tree(WHILE, $2, $4); }
+	| REPEAT statement UNTIL expression
+	{ $$ = make_tree(REPEAT, $2, $4); }
+	| FOR ID ASSIGNOP range DO statement
+	{ 
+		$$ = make_tree(ASSIGNOP, make_id(semantic_lookup(top_scope, $2)), $4); /* create tree for assignment statement */
+		$$ = make_tree(FOR, $$, $6);
+	}
 	;
 
 unmatched_statement: IF expression THEN statement
@@ -220,7 +244,13 @@ variable: ID
 			$$ = make_id(semantic_lookup(top_scope, $1));
 		}
 	| ID '[' expression ']'
-		{ $$ = make_tree(ARRAY_ACCESS, make_id(semantic_lookup(top_scope, $1)), $3); }
+		{ 
+			if (type_of($3) != INTEGRAL) {
+				fprintf(stderr, "ERROR: array index must be an integer.\n");
+				exit(1);
+			}
+			$$ = make_tree(ARRAY_ACCESS, make_id(semantic_lookup(top_scope, $1)), $3);
+		}
 	;
 
 procedure_statement: ID
@@ -286,7 +316,13 @@ factor: ID
 	| ID '(' expression_list ')'
 		{$$ = make_tree(FUNCTION_CALL, make_id(global_scope_search(top_scope, $1)), $3);}
 	| ID '[' expression ']'
-		{$$ = make_tree(ARRAY_ACCESS, make_id(global_scope_search(top_scope, $1)), $3);}
+		{
+			if (type_of($3) != INTEGRAL) {
+				fprintf(stderr, "ERROR: array index must be an integer.\n");
+				exit(1);
+			}
+			$$ = make_tree(ARRAY_ACCESS, make_id(global_scope_search(top_scope, $1)), $3);
+		}
 	| INUM
 		{$$ = make_inum($1);}
 	| RNUM

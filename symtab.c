@@ -21,8 +21,11 @@ scope_t *make_scope() {
 }
 
 void free_scope(scope_t *p) {
-	//BAD
-	free(p);
+
+	// for (int i = 0; i < HASH_SIZE; i++) {
+	// 	free_list(p->table[i]);
+	// }
+	// free(p);
 }
 
 scope_t *scope_push( scope_t *top) {

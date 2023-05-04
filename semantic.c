@@ -41,14 +41,14 @@ void semantic_set_type(tree_t *id_list, int type_val) {
 	if (left == NULL && right == NULL) {
 		
 		id_list->attribute.sval->type = type_val;
-		fprintf(stderr, "[SET_TYPE: %s, %d]\n", id_list->attribute.sval->name, id_list->attribute.sval->type);
+		fprintf(stderr, "[LEAF_SET_TYPE: %s, %d]\n", id_list->attribute.sval->name, id_list->attribute.sval->type);
 	}
 
 	/* set type of right child (ID) */
 
 	else if (right != NULL) {
 		right->attribute.sval->type = type_val;
-		fprintf(stderr, "[SET_TYPE: %s, %d]\n", right->attribute.sval->name, right->attribute.sval->type);
+		fprintf(stderr, "[R_SET_TYPE: %s, %d]\n", right->attribute.sval->name, right->attribute.sval->type);
 		semantic_set_type(left, type_val);
 	}
 }
@@ -66,12 +66,13 @@ int type_of(tree_t *t) {
 		return INTEGRAL;
 	case RNUM:
 		return RATIONAL;
+	case PROC: 
+		return PROC;
 	case ADDOP:
 		
 		if (t->right == NULL) {
 			return type_of(t->left);
 		}
-	case PROC: 
 	
 	case MULOP:
 	case RELOP:
@@ -85,7 +86,12 @@ int type_of(tree_t *t) {
 		left_type = type_of(t->left);
 		right_type = type_of(t->right);
 
-		if 
+		if (left_type == PROC || right_type == PROC) {
+			fprintf(stderr, "ERROR: procedure not allowed in expression\n");
+			exit(1);
+		}
+
+
 
 		if (left_type != right_type) {
 			fprintf(stderr, "ERROR: type mismatch in %s\n", int_to_type(t->type));
@@ -94,7 +100,7 @@ int type_of(tree_t *t) {
 		return left_type;
 
 	case FUNC:
-		
+		return t->type;
 	
 		
 
@@ -174,19 +180,19 @@ Enacts these rules
    6.2. Procedures must accept exactly the same number of arguments as is
         declared in its header, with the correct sequence of types 
 	*/
-bool semantic_validate_expr(tree_t *t) {
+int semantic_validate_expr(tree_t *t) {
 
-	if (t == NULL) return false;	
+	if (t == NULL) return 0;	
 
 	int left_type, right_type;
 
 	switch (t->type) {
 	case ID:
-		return true;
+		return 1;
 	case INUM:
-		return true;
+		return 1;
 	case RNUM:
-		return true;
+		return 1;
 	case ADDOP:
 		
 		if (t->right == NULL) {
@@ -205,42 +211,42 @@ bool semantic_validate_expr(tree_t *t) {
 
 		if (left_type != right_type) {
 			fprintf(stderr, "ERROR: type mismatch in %s\n", int_to_type(t->type));
-			return false;
+			return 0;
 		}
-		return true;
+		return 1;
 
 	case NOT:
 		return semantic_validate_expr(t->left);
 
 	default:
-		return false;
+		return 0;
 
 	}
 }
 
-bool semantic_validate_stmt(tree_t *t) {
+int semantic_validate_stmt(tree_t *t) {
 
-	if (t == NULL) return false;
+	if (t == NULL) return 0;
 
 	switch (t->type) {
 
 		case IF:
 			if (t->left == NULL || t->right == NULL) {
 				fprintf(stderr, "ERROR: invalid IF statement\n");
-				return false;
+				return 0;
 			}
 			if (type_of(t->left) != INUM) {
 				fprintf(stderr, "ERROR: condition of IF statement does not evaluate to boolean\n");
-				return false;
+				return 0;
 			}
-			return true;
+			return 1;
 		case WHILE:
 			if (t->left == NULL || t->right == NULL) {
-				fprintf(stder,, "ERROR: invalid WHILE statement\n");
+				fprintf(stderr, "ERROR: invalid WHILE statement\n");
 			}
 			if (type_of(t->left) != INUM) {
 				fprintf(stderr, "ERROR: condition of WHILE statement does not evaluate to boolean\n");
-				return false;
+				return 0;
 			}
 	}
 }

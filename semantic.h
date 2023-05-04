@@ -7,5 +7,6 @@ list_t *semantic_lookup(scope_t *scope, char *name);
 void semantic_set_type(tree_t *id_list, int type_val);
 int type_of(tree_t *t);
 void semantic_set(scope_t *scope, char *name);
-
+char *int_to_type(int type);
+int semantic_validate_expr(tree_t *t);
 #endif

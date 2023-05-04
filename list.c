@@ -18,9 +18,10 @@ list_t *make_list(char *str) {
 }
 
 void free_list(list_t *p) {
-	//stub
-	free(p->name);
-	free(p);
+	// free(p->name);
+	// free_list(p->arg_list);
+	// free_list(p->next);
+	// free(p);
 }
 
 void list_print(list_t *top) {
