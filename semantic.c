@@ -31,12 +31,12 @@ list_t *semantic_lookup(scope_t *scope, char *name) {
 }
 /* set all types in a list of identifiers  */
 void semantic_set_type(tree_t *id_list, int type_val) {
-	
+
 	if (id_list == NULL) return;
 	
 	tree_t *left, *right;
 	left = id_list->left;
-	right = id_list ->right;
+	right = id_list->right;
 
 	if (left == NULL && right == NULL) {
 		

@@ -17,7 +17,6 @@ scope_t *make_scope() {
 	}
 	p->next = NULL;
 	return p;
-
 }
 
 void free_scope(scope_t *p) {
@@ -25,7 +24,7 @@ void free_scope(scope_t *p) {
 	// for (int i = 0; i < HASH_SIZE; i++) {
 	// 	free_list(p->table[i]);
 	// }
-	// free(p);
+	free(p);
 }
 
 scope_t *scope_push( scope_t *top) {
@@ -50,12 +49,15 @@ scope_t *scope_pop(scope_t *top) {
 /* search at top scope */
 list_t *scope_insert(scope_t *top, char *name) {
 
-	if (top == NULL)
+	if (top == NULL) {
+		fprintf(stderr, "scope_insert: top is NULL\n");
 		return NULL;
+	}
 
 	int index = hashpjw(name);
 	list_t *start = top->table[index];
 	top->table[index] = list_insert(start, name);
+//	fprintf(stderr, "scope_insert: inserted %s at index %d\n", name, index);
 	return top->table[index];
 }
 
@@ -66,6 +68,8 @@ list_t *scope_search(scope_t *top, char *name) {
 
 	int index = hashpjw(name);
 	list_t *start = top->table[index];
+//	fprintf(stderr, "printing list: ");
+//	list_print(start);
 	return list_search(start, name);
 }
 
@@ -98,3 +102,13 @@ int hashpjw(char *s) {
 	}
 	return h % HASH_SIZE;
 }	
+
+// void print_scope(scope_t *scope) {
+// 	for (int i = 0; i < HASH_SIZE; i++) {
+// 		if (scope->table[i] != NULL) {
+// 			fprintf(stderr, "%i: ", i);
+// 			list_print(scope->table[i]);
+			
+// 		}
+// 	}
+// }

@@ -1076,7 +1076,7 @@ YY_RULE_SETUP
 case 47:
 YY_RULE_SETUP
 #line 63 "qc.l"
-{;}
+{ fprintf(stderr, "%c", yytext[0]);}
 	YY_BREAK
 case 48:
 /* rule 48 can match eol */

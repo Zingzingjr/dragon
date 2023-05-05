@@ -4,10 +4,10 @@ def main( input, output );
   var a,b: integral;
 
   proc boo( a: integral );
-    var b: rational;
+	var b: integral;
 
   begin
-    b := 1.23 
+    b := 1.23
   end;
 
 begin

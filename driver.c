@@ -23,8 +23,9 @@ int main() {
 			case 0:
 				printf("insert name = ");
 				scanf("%s", buffer);
+				printf("buffer = %s\n", buffer);
 				p = scope_insert(top, buffer);
-				if (p != NULL) {	
+				if (p != NULL) {
 					printf("Inserted[%s]\n", p->name);
 				} else {
 					printf("Name[%s] not inserted\n", buffer);

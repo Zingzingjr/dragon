@@ -26,5 +26,3 @@ void print_tree(tree_t *t);
 int eval_tree(tree_t *t);
 
 #endif
-
-

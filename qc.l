@@ -60,7 +60,7 @@ whitespace [ \t]+
 {identifier} 	{fprintf(stderr, "[ID:%s]", yylval.sval = (char *)strdup(yytext)); return ID;}
 {number}		{fprintf(stderr, "[NUM:%d]", yylval.ival = atoi(yytext)); return INUM;}
 {number}"."{number} {fprintf(stderr, "[RNUM:%f]", yylval.rval = atof(yytext)); return RNUM;}
-{whitespace}	{;}
+{whitespace}	{ fprintf(stderr, "%c", yytext[0]);}
 \n				{fprintf(stderr, "\n");}
 .				{fprintf(stderr, "<%c>", yytext[0]); return yytext[0];}
 
