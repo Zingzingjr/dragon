@@ -53,3 +53,9 @@ dkms.conf
 
 *.zip
 Semantic-Testing/notes.txt
+lex.yy.c
+y.tab.h
+y.tab.c
+boo.q
+.gitignore
+qc

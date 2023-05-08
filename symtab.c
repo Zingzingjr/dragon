@@ -24,7 +24,7 @@ void free_scope(scope_t *p) {
 	// for (int i = 0; i < HASH_SIZE; i++) {
 	// 	free_list(p->table[i]);
 	// }
-	free(p);
+	//free(p);
 }
 
 scope_t *scope_push( scope_t *top) {

@@ -79,14 +79,15 @@ int yyerror(const char*);
 %type <tval> unmatched_statement
 %type <tval> optional_statements
 %type <tval> range
+%type <tval> arguments
 
 %%
 program: DEF ID '(' identifier_list ')' ';'
 	{
 //		fprintf(stderr, "program\n");
-		top_scope = scope_push(top_scope); /* create a new scope */
+//		top_scope = scope_push(top_scope); /* create a new scope */
 		//fprintf(stderr, "NEW SCOPE (program)\n");
-		scope_insert(top_scope, $2); /* insert program ID into scope */
+//		scope_insert(top_scope, $2); /* insert program ID into scope */
 		//print_scope(top_scope);
 	}
 	declarations
@@ -97,14 +98,16 @@ program: DEF ID '(' identifier_list ')' ';'
 
 identifier_list: ID
 		{
-			fprintf(stderr, "identifier_list: ID\n");
+		//	fprintf(stderr, "<<identifier_list: %s>>", $1);
+			double_check(top_scope, $1);
 			id_ptr = scope_insert(top_scope, $1);
 			//print_scope(top_scope);
 			$$ = make_id(id_ptr);
 		}
 	| identifier_list ',' ID
 		{ 
-			fprintf(stderr, "identifier_list: identifier_list ',' ID\n");
+		//	fprintf(stderr, "<<identifier_list: identifier_list %s>>", $3);
+			double_check(top_scope, $3);
 			id_ptr = scope_insert(top_scope, $3);
 			//print_scope(top_scope);
 			$$ = make_tree(LIST, $1, make_id(id_ptr));
@@ -125,9 +128,9 @@ declarations: declarations VAR identifier_list ':' type ';'
 			// 	fprintf(stderr, "ERROR: ID %s already declared in this scope.\n", $3->attribute.sval->name);
 			// 	exit(1);
 			// }
-			fprintf(stderr, "declarations has begun\n");
+		//	fprintf(stderr, "declarations has begun\n");
 			semantic_set_type($3, $5);
-			fprintf(stderr, "declarations has finished\n");
+		//	fprintf(stderr, "declarations has finished\n");
 		}
 	| /* empty */
 	;
@@ -140,7 +143,7 @@ type: standard_type
 	| ARRAY '[' range ']' OF standard_type
 		{ 
 //			fprintf(stderr, "type: ARRAY '[' range ']' OF standard_type\n");
-			$$ = -1;
+			$$ = ARRAY;
 		}
 	;
 
@@ -169,52 +172,61 @@ subprogram_declaration:
 	subprogram_declarations
 	compound_statement
 	{ 
-	//	fprintf(stderr, "subprogram_declaration\n");
+		fprintf(stderr, "subprogram_declaration\n");
 		top_scope = scope_pop(top_scope);
 	} /* remove inner scope */
 	;
 
-subprogram_header: FUNC ID arguments ':' standard_type ';'
-	{
-//		fprintf(stderr, "subprogram_header: FUNC ID arguments ':' standard_type ';'\n");
+subprogram_header: FUNC ID  {
+		double_check(top_scope, $2);
+		id_ptr = scope_insert(top_scope, $2); /* record function ID in current scope */
+		top_scope = scope_push(top_scope);
 		if (scope_search(top_scope, $2) != NULL) {
 			fprintf(stderr, "ERROR: FUNC ID %s already declared in this scope.\n", $2);
 			exit(1);
 		}
 		id_ptr = scope_insert(top_scope, $2); /* record function ID in current scope */
-		//scope_print(top_scope);
-		id_ptr->type = $5;
-		top_scope = scope_push(top_scope); /* Create a new scope */
-		//fprintf(stderr, "NEW SCOPE\n");
-		scope_insert(top_scope, $2);
-		//scope_print(top_scope);
-		//make_tree(FUNC, make_id(semantic_lookup(top_scope, $2)), $3); /* create a tree for the function header */
 	}
-	| PROC ID arguments ';' {
-		fprintf(stderr, "subprogram_header: PROC ID arguments ';'\n");
-		if (scope_search(top_scope, $2) != NULL) {
-			fprintf(stderr, "ERROR: PROC ID %s already declared in this scope.\n", $2);
-			exit(1);
-		}
+
+	arguments ':' standard_type ';'{
+
+	}
+	| PROC ID { 
+		double_check(top_scope, $2);
 		id_ptr = scope_insert(top_scope, $2); /* record procedure ID in current scope */
-		top_scope = scope_push(top_scope);  /* create a new scope */
-		//fprintf(stderr, "NEW SCOPE\n");
-		scope_insert(top_scope, $2);
-		//make_tree(PROC, make_id(semantic_lookup(top_scope, $2)), $3); /* create a tree for the procedure header */
+		top_scope = scope_push(top_scope);
+	}
+	  arguments ';' {
+	// //	fprintf(stderr, "subprogram_header: PROC ID arguments ';'\n");
+	// 	if (scope_search(top_scope, $2) != NULL) {
+	// 		fprintf(stderr, "ERROR: PROC ID %s already declared in this scope.\n", $2);
+	// 		exit(1);
+	// 	}
+	// 	id_ptr = scope_insert(top_scope, $2); /* record procedure ID in current scope */
+	// 	//top_scope = scope_push(top_scope);  /* create a new scope */
+	// 	//fprintf(stderr, "NEW SCOPE\n");
+	// 	scope_insert(top_scope, $2);
+	// 	//make_tree(PROC, make_id(semantic_lookup(top_scope, $2)), $3); /* create a tree for the procedure header */
 	}	
-	
-	arguments ';'
 	;
 
 arguments: '(' parameter_list ')'
-		{ fprintf(stderr, "arguments: '(' parameter_list ')'\n");}
-	| /* empty */
+		{ $$ = $2; /* fprintf(stderr, "arguments: '(' parameter_list ')'\n"); */}
+	|  {$$ = NULL;}/* empty */
 	;
 
 parameter_list: identifier_list ':' type
-		{fprintf(stderr, "parameter_list: identifier_list ':' type\n"); semantic_set_type($1, $3); $$ = $1;}
+		{
+			/*fprintf(stderr, "<<parameter_list: identifier_list: %d>>\n", $3); */ 
+			semantic_set_type($1, $3); 
+			$$ = $1;
+		}
 	| parameter_list ';' identifier_list ':' type
-		{fprintf(stderr, "parameter_list: parameter_list ';' identifier_list ':' type\n"); semantic_set_type($3, $5); $$ = $3;}
+		{
+			/* fprintf(stderr, "parameter_list: parameter_list ';' identifier_list ':' type\n"); */
+			semantic_set_type($3, $5);
+			$$ = make_tree(LIST, $1, $3);
+		}
 	;
 
 /* ensure all below have trees */
@@ -224,14 +236,14 @@ compound_statement:
 		optional_statements
 	END
 	{
-		fprintf(stderr, "compound_statement: BEGIN optional_statements END\n"); 
+	//	fprintf(stderr, "compound_statement: BEGIN optional_statements END\n"); 
 		$$ = $2;
 	}
 	;
 
 optional_statements: statement_list
 	{
-		fprintf(stderr, "optional_statements: statement_list\n"); 
+	//	fprintf(stderr, "optional_statements: statement_list\n"); 
 		$$ = $1;
 	}
 	| /* empty */
@@ -240,12 +252,12 @@ optional_statements: statement_list
 
 statement_list: statement
 	{
-		fprintf(stderr, "statement_list: statement\n");
+	//	fprintf(stderr, "statement_list: statement\n");
 		$$ = $1;
 	}
 	| statement_list ';' statement
 	{
-		fprintf(stderr, "statement_list: statement_list ';' statement\n");
+	//	fprintf(stderr, "statement_list: statement_list ';' statement\n");
 		make_tree(LIST, $1, $3);
 	}
 	;
@@ -261,19 +273,14 @@ statement: matched_statement
 matched_statement: 
 		IF expression THEN matched_statement ELSE matched_statement
 		 { 
-			fprintf(stderr, "matched_statement: IF expression THEN matched_statement ELSE matched_statement\n");
+		//	fprintf(stderr, "matched_statement: IF expression THEN matched_statement ELSE matched_statement\n");
 			$$ = make_tree(THEN, $4, $6);
 			$$ = make_tree(IF, $2, $$);
 		 } 
 		| variable ASSIGNOP expression
 		{ 
-			fprintf(stderr, "matched_statement: variable ASSIGNOP expression\n");
-			if (type_of($1) != type_of($3)) {
-				fprintf(stderr, "type of $1: %d type of $3: %d\n", type_of($1), type_of($3));
-				fprintf(stderr, "ERROR: type mismatch in assignment statement.\n");
-				exit(1);
-			}
-			$$ = make_tree(ASSIGNOP, $1, $3);		
+		//	fprintf(stderr, "matched_statement: variable ASSIGNOP expression\n");
+			type_check(type_of($1), type_of($3));
 		}
 	| procedure_statement
 	| compound_statement
@@ -373,7 +380,10 @@ factor: ID
 			$$ = make_id(global_scope_search(top_scope, $1));
 		} */
 	| ID '(' expression_list ')'
-		{$$ = make_tree(FUNCTION_CALL, make_id(global_scope_search(top_scope, $1)), $3);}
+		{
+			id_ptr = semantic_lookup(top_scope, $1);
+			$$ = make_tree(FUNCTION_CALL, make_id(global_scope_search(top_scope, $1)), $3);
+		}
 	| ID '[' expression ']'
 		{
 			if (type_of($3) != INTEGRAL) {

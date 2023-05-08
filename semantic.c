@@ -85,6 +85,7 @@ int type_of(tree_t *t) {
 
 		left_type = type_of(t->left);
 		right_type = type_of(t->right);
+		fprintf(stderr, "type_of: %s, %s\n", int_to_type(left_type), int_to_type(right_type));
 
 		if (left_type == PROC || right_type == PROC) {
 			fprintf(stderr, "ERROR: procedure not allowed in expression\n");
@@ -140,6 +141,31 @@ char *int_to_type(int type) {
 		return "TYPE_ERROR";
 	default:
 		return "UNKNOWN";
+	}
+}
+
+void type_check(int type_1, int type_2) {
+	fprintf(stderr, "type_check: %s, %s\n", int_to_type(type_1), int_to_type(type_2));
+	if (type_1 != type_2) {
+		fprintf(stderr, "ERROR: type mismatch\n");
+		exit(1);
+	}
+}
+
+void double_check(scope_t *t, char *name) {
+	
+	list_t *p = scope_search(t, name);
+	if (p != NULL) {
+		fprintf(stderr, "ERROR: name(%s) already declared\n", name);
+		exit(1);
+	}
+}
+
+void declare_check(list_t *p, char *name) {
+	
+	if (p != NULL) {
+		fprintf(stderr, "ERROR: name(%s) already declared\n", name);
+		exit(1);
 	}
 }
 /*
