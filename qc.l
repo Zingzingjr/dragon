@@ -33,6 +33,7 @@ whitespace [ \t]+
 "repeat"		{fprintf(stderr, "[REPEAT]"); return REPEAT;}
 "until"			{fprintf(stderr, "[UNTIL]"); return UNTIL;}
 "for"			{fprintf(stderr, "[FOR]"); return FOR;}
+"to"			{fprintf(stderr, "[TO]"); return TO;}
 "do"			{fprintf(stderr, "[DO]"); return DO;}
 "<" 			{fprintf(stderr, "[RELOP:%d]", yylval.opval = LT); return RELOP;}
 "<=" 			{fprintf(stderr, "[RELOP:%d]", yylval.opval = LE); return RELOP;}

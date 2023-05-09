@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 #include "const.h"
 #include "tree.h"
 #include "y.tab.h"
@@ -37,6 +38,18 @@ tree_t *make_rnum(float val) {
 	tree_t *p = make_tree(RNUM, NULL, NULL);
 	p->attribute.rval = val;
 	return p;
+}
+
+int return_scan(tree_t *t, char *name) {
+
+	if (t == NULL) return 0;
+
+	if (t->type == ID) {
+		if (!strcmp(t->attribute.sval->name, name)) {
+			return 1;
+		}
+	}
+	return return_scan(t->left, name) || return_scan(t->right, name);
 }
 
 

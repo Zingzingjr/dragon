@@ -10,14 +10,13 @@
 /* check that a identifier exists*/
 list_t *semantic_lookup(scope_t *scope, char *name) {
 
-	scope_t *new_scope = scope;
-	list_t *p = scope_search(new_scope, name);
+	//scope_t *new_scope = scope;
+	list_t *p = global_scope_search(scope, name);
 	
-	while ((new_scope = scope_pop(new_scope)) != NULL) {
-		p = scope_search(new_scope, name);
-		if (p != NULL) {
+	// while ((new_scope = scope_pop(new_scope)) != NULL) {
+	// 	p = scope_search(new_scope, name);
+	if (p != NULL) {
 			return p;
-		}
 	}
 	fprintf(stderr, "ERROR: name(%s) used but undeclared\n", name);
 	exit(1);
@@ -55,16 +54,21 @@ void semantic_set_type(tree_t *id_list, int type_val) {
 /* returns the "type" of a tree */
 int type_of(tree_t *t) {
 
+	fprintf(stderr, "type_of: %d\n", t->type);
+
 	if (t == NULL) return TYPE_ERROR;
 	
 	int left_type, right_type;
 
 	switch (t->type) {
 	case ID:
+		fprintf(stderr, "ID: %s: %i\n", t->attribute.sval->name, t->attribute.sval->type);
 		return t->attribute.sval->type;	
 	case INUM:
+		//fprintf(stderr, "INUM: %s\n", t->attribute.sval->name);
 		return INTEGRAL;
 	case RNUM:
+		//fprintf(stderr, "RNUM: %s\n", t->attribute.sval->name);
 		return RATIONAL;
 	case PROC: 
 		return PROC;
@@ -102,10 +106,6 @@ int type_of(tree_t *t) {
 
 	case FUNC:
 		return t->type;
-	
-		
-
-
 	default:
 		return TYPE_ERROR;
 	}
@@ -168,6 +168,19 @@ void declare_check(list_t *p, char *name) {
 		exit(1);
 	}
 }
+
+
+//BROKEN
+list_t *tree_to_list(tree_t *t) {
+
+	if (t == NULL) return NULL;
+
+	list_t *p = make_list(t->attribute.sval->name);
+	if (t->type == LIST) p->type = type_of(t->right);
+
+
+	return p;
+}
 /*
 Enacts these rules
 
@@ -206,6 +219,8 @@ Enacts these rules
    6.2. Procedures must accept exactly the same number of arguments as is
         declared in its header, with the correct sequence of types 
 	*/
+
+//NOT USED
 int semantic_validate_expr(tree_t *t) {
 
 	if (t == NULL) return 0;	
@@ -249,7 +264,7 @@ int semantic_validate_expr(tree_t *t) {
 
 	}
 }
-
+//NOT USED
 int semantic_validate_stmt(tree_t *t) {
 
 	if (t == NULL) return 0;

@@ -12,4 +12,5 @@ void type_check(int, int);
 void double_check(scope_t *, char *);
 void declare_check(list_t *, char *);
 int semantic_validate_expr(tree_t *t);
+list_t* tree_to_list(tree_t *t);
 #endif

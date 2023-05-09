@@ -29,7 +29,7 @@ void list_print(list_t *top) {
 	list_t *q = top;
 	
 	while (q != NULL) {
-		printf("[%s] -> ", q->name);
+		printf("[%s : %d] -> ", q->name, q->type);
 		q = q->next;
 	}
 	printf("\n");
@@ -62,4 +62,16 @@ list_t *list_search(list_t *top, char *str) {
 		q = q->next;
 	}
 	return NULL;	
+}
+
+int list_length(list_t *top) {
+
+	list_t *q = top;
+	int count = 0;
+	
+	while (q != NULL) {
+		count++;
+		q = q->next;
+	}
+	return count;
 }

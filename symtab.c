@@ -103,12 +103,12 @@ int hashpjw(char *s) {
 	return h % HASH_SIZE;
 }	
 
-// void print_scope(scope_t *scope) {
-// 	for (int i = 0; i < HASH_SIZE; i++) {
-// 		if (scope->table[i] != NULL) {
-// 			fprintf(stderr, "%i: ", i);
-// 			list_print(scope->table[i]);
-			
-// 		}
-// 	}
-// }
+void scope_print(scope_t *scope) {
+	scope_t *new_scope = scope;
+	for (int i = 0; i < HASH_SIZE; i++) {
+		if (scope->table[i] != NULL) {
+			fprintf(stderr, "%i: ", i);
+			list_print(scope->table[i]);
+		}
+	}
+}
