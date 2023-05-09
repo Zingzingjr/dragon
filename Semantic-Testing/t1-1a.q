@@ -1,10 +1,6 @@
-(* ERROR: variable redeclared *)
-
 def main( input, output );
-  var a,b,c: integral;
-  var x,y,c: rational;
+	var a,b,c: integral;
+	var x,y,c: rational;
+	begin
 
-begin
-
-end.
-
+	end.

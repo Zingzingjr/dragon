@@ -28,5 +28,3 @@ int rank( tree_t *t, int d );
 void gencode_start( tree_t *t );
 
 #endif
-
-

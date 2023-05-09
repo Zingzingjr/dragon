@@ -8,13 +8,14 @@
 
 %}
 
-identifier [a-zA-Z]+
+%option yylineno
+identifier [a-zA-Z][a-zA-Z0-9]*
 number [0-9]+
 whitespace [ \t]+
 
 %%
-"{".*"}"		{;}
-"(*".*"*)"		{;}
+"{"[^"}"]*"}"		{;}
+"(*"[^"*}"]*"*)"    {;}
 "def"			{fprintf(stderr, "[DEF]"); return DEF;}
 "proc"			{fprintf(stderr, "[PROC]"); return PROC;}
 "func"			{fprintf(stderr, "[FUNC]"); return FUNC;}
@@ -23,17 +24,17 @@ whitespace [ \t]+
 "of"			{fprintf(stderr, "[OF]"); return OF;}
 "integral"		{fprintf(stderr, "[INTEGRAL]"); return INTEGRAL;}
 "rational"		{fprintf(stderr, "[RATIONAL]"); return RATIONAL;}
-"begin"		{fprintf(stderr, "[BEGIN]"); return BBEGIN;}
-"end"		{fprintf(stderr, "[END]"); return END;}
-"if"		{fprintf(stderr, "[IF]"); return IF;}
-"then"	{fprintf(stderr, "[THEN]"); return THEN;}
-"else"	{fprintf(stderr, "[ELSE]"); return ELSE;}
-"while"	{fprintf(stderr, "[WHILE]"); return WHILE;}
-"do"	{fprintf(stderr, "[DO]"); return DO;}
-{identifier} 	{fprintf(stderr, "[ID:%s]", yylval.sval = (char *)strdup(yytext)); return ID;}
-{number}		{fprintf(stderr, "[NUM:%d]", yylval.ival = atoi(yytext)); return INUM;}
-{number}"."{number} {fprintf(stderr, "[RNUM:%f]", yylval.rval = atof(yytext)); return RNUM;}
-{whitespace}	{;}
+"begin"			{fprintf(stderr, "[BEGIN]"); return BBEGIN;}
+"end"			{fprintf(stderr, "[END]"); return END;}
+"if"			{fprintf(stderr, "[IF]"); return IF;}
+"then"			{fprintf(stderr, "[THEN]"); return THEN;}
+"else"			{fprintf(stderr, "[ELSE]"); return ELSE;}
+"while"			{fprintf(stderr, "[WHILE]"); return WHILE;}
+"repeat"		{fprintf(stderr, "[REPEAT]"); return REPEAT;}
+"until"			{fprintf(stderr, "[UNTIL]"); return UNTIL;}
+"for"			{fprintf(stderr, "[FOR]"); return FOR;}
+"to"			{fprintf(stderr, "[TO]"); return TO;}
+"do"			{fprintf(stderr, "[DO]"); return DO;}
 "<" 			{fprintf(stderr, "[RELOP:%d]", yylval.opval = LT); return RELOP;}
 "<=" 			{fprintf(stderr, "[RELOP:%d]", yylval.opval = LE); return RELOP;}
 ">" 			{fprintf(stderr, "[RELOP:%d]", yylval.opval = GT); return RELOP;}
@@ -48,7 +49,7 @@ whitespace [ \t]+
 "and" 			{fprintf(stderr, "[MULOP:%d]", yylval.opval = AND); return MULOP;}
 "div" 			{fprintf(stderr, "[MULOP:%d]", yylval.opval = DIV); return MULOP;}
 "mod" 			{fprintf(stderr, "[MULOP:%d]", yylval.opval = MOD); return MULOP;}
-":=" 			{fprintf(stderr, "[ASSIGNOP]", yytext[0]); return ASSIGNOP;}
+":=" 			{fprintf(stderr, "[ASSIGNOP]"); return ASSIGNOP;}
 "(" 			{fprintf(stderr, "{%c}", yytext[0]); return yytext[0];}
 ")" 			{fprintf(stderr, "{%c}", yytext[0]); return yytext[0];}
 "[" 			{fprintf(stderr, "{%c}", yytext[0]); return yytext[0];}
@@ -57,13 +58,16 @@ whitespace [ \t]+
 ";" 			{fprintf(stderr, "{%c}", yytext[0]); return yytext[0];}
 "," 			{fprintf(stderr, "{%c}", yytext[0]); return yytext[0];}
 "." 			{fprintf(stderr, "{%c}", yytext[0]); return yytext[0];}
+{identifier} 	{fprintf(stderr, "[ID:%s]", yylval.sval = (char *)strdup(yytext)); return ID;}
+{number}"."{number} {fprintf(stderr, "[RNUM:%f]", yylval.rval = atof(yytext)); return RNUM;}
+{number}		{fprintf(stderr, "[NUM:%d]", yylval.ival = atoi(yytext)); return INUM;}
+{whitespace}	{ fprintf(stderr, "%c", yytext[0]);}
 \n				{fprintf(stderr, "\n");}
 .				{fprintf(stderr, "<%c>", yytext[0]); return yytext[0];}
 
 %%
 
-int yyerror(char *message) {
-
-	fprintf(stderr, "ERROR: %s\n", message);
+int yyerror(char *message) {	
+	fprintf(stderr, "ERROR [line:%d]: %s\n", yylineno, message);
 	exit(1);
 }

@@ -26,5 +26,6 @@ void list_print(list_t *);
 list_t *list_insert(list_t *, char *);
 list_t *list_search(list_t *, char *);
 
+int list_length(list_t *);
 
 #endif

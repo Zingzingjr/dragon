@@ -21,4 +21,6 @@ list_t *scope_insert(scope_t *top, char *name);
 list_t *scope_search(scope_t *top, char *name);
 list_t *global_scope_search(scope_t *top, char *name);
 
+void scope_print(scope_t *);
+
 #endif
