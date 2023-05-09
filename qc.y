@@ -9,6 +9,7 @@
 #include "semantic.h"
 
 list_t *id_ptr;
+list_t *arg_list;
 scope_t  *top_scope;
 tree_t *tree_ptr;
 
@@ -50,7 +51,7 @@ int yyerror(const char*);
 
 %token FUNCTION_CALL ARRAY_ACCESS
 %token LIST
-%token RANGE
+%token RANGE TO
 %token FOR
 %token REPEAT
 %token UNTIL
@@ -100,6 +101,7 @@ identifier_list: ID
 		{
 		//	fprintf(stderr, "<<identifier_list: %s>>", $1);
 			double_check(top_scope, $1);
+			fprintf(stderr, "inserted %s ", $1);
 			id_ptr = scope_insert(top_scope, $1);
 			//print_scope(top_scope);
 			$$ = make_id(id_ptr);
@@ -108,6 +110,7 @@ identifier_list: ID
 		{ 
 		//	fprintf(stderr, "<<identifier_list: identifier_list %s>>", $3);
 			double_check(top_scope, $3);
+			fprintf(stderr, "inserted %s ", $3);
 			id_ptr = scope_insert(top_scope, $3);
 			//print_scope(top_scope);
 			$$ = make_tree(LIST, $1, make_id(id_ptr));
@@ -128,9 +131,11 @@ declarations: declarations VAR identifier_list ':' type ';'
 			// 	fprintf(stderr, "ERROR: ID %s already declared in this scope.\n", $3->attribute.sval->name);
 			// 	exit(1);
 			// }
-		//	fprintf(stderr, "declarations has begun\n");
+//			fprintf(stderr, "declarations has begun");
 			semantic_set_type($3, $5);
-		//	fprintf(stderr, "declarations has finished\n");
+//			fprintf(stderr, "of type %d\n", $5);
+//			fprintf(stderr, "declarations has finished");
+			scope_print(top_scope);
 		}
 	| /* empty */
 	;
@@ -155,6 +160,14 @@ range: INUM '.' '.' INUM
 			exit(1);
 		}
 		make_tree(RANGE, make_inum($1), make_inum($4));
+	}
+	|
+	INUM TO INUM {
+		if ($1 > $3) {
+			fprintf(stderr, "ERROR: range lower bound greater than upper bound.\n");
+			exit(1);
+		}
+		make_tree(RANGE, make_inum($1), make_inum($3));
 	}
 	;
 
@@ -186,27 +199,25 @@ subprogram_header: FUNC ID  {
 			exit(1);
 		}
 		id_ptr = scope_insert(top_scope, $2); /* record function ID in current scope */
+		scope_print(top_scope);
 	}
 
 	arguments ':' standard_type ';'{
+		arg_list = tree_to_list($4);
+		for (list_t *ptr = arg_list; ptr != NULL; ptr = ptr->next) {
 
+		}
 	}
 	| PROC ID { 
+//		fprintf(stderr, "	Procedure Started	");
 		double_check(top_scope, $2);
 		id_ptr = scope_insert(top_scope, $2); /* record procedure ID in current scope */
 		top_scope = scope_push(top_scope);
+		scope_print(top_scope);
 	}
 	  arguments ';' {
-	// //	fprintf(stderr, "subprogram_header: PROC ID arguments ';'\n");
-	// 	if (scope_search(top_scope, $2) != NULL) {
-	// 		fprintf(stderr, "ERROR: PROC ID %s already declared in this scope.\n", $2);
-	// 		exit(1);
-	// 	}
-	// 	id_ptr = scope_insert(top_scope, $2); /* record procedure ID in current scope */
-	// 	//top_scope = scope_push(top_scope);  /* create a new scope */
-	// 	//fprintf(stderr, "NEW SCOPE\n");
-	// 	scope_insert(top_scope, $2);
-	// 	//make_tree(PROC, make_id(semantic_lookup(top_scope, $2)), $3); /* create a tree for the procedure header */
+		
+		scope_print(top_scope);
 	}	
 	;
 
@@ -280,19 +291,34 @@ matched_statement:
 		| variable ASSIGNOP expression
 		{ 
 		//	fprintf(stderr, "matched_statement: variable ASSIGNOP expression\n");
-			type_check(type_of($1), type_of($3));
+			if (type_of($1) != type_of($3)) {
+				fprintf(stderr, "%i %i", type_of($1), type_of($3));
+				fprintf(stderr, "ERROR: type mismatch in assignment statement.\n");
+				exit(1);
+			}
+			$$ = make_tree(ASSIGNOP, $1, $3);
+			// type_check(type_of($1), type_of($3));
 		}
 	| procedure_statement
 	| compound_statement
 	| WHILE expression DO statement
-	{ $$ = make_tree(WHILE, $2, $4); }
+	{ 
+		if ($2->type != RELOP) {
+			fprintf(stderr, "ERROR: WHILE expression must be a boolean.\n");
+			exit(1);
+		}
+		$$ = make_tree(WHILE, $2, $4); 
+	}
 	| REPEAT statement UNTIL expression
-	{ $$ = make_tree(REPEAT, $2, $4); }
+	{ $$ = make_tree(REPEAT, $4, $2); }
 	| FOR ID ASSIGNOP range DO statement
 	{ 
 		fprintf(stderr, "matched_statement: FOR ID ASSIGNOP range DO statement\n");
-		$$ = make_tree(ASSIGNOP, make_id(semantic_lookup(top_scope, $2)), $4); /* create tree for assignment statement */
-		$$ = make_tree(FOR, $$, $6);
+		id_ptr = semantic_lookup(top_scope, $2);
+		type_check(id_ptr->type, INUM);
+		$$ = make_tree(FOR, make_id(id_ptr), $4);
+		// $$ = make_tree(ASSIGNOP, make_id(semantic_lookup(top_scope, $2)), $4); /* create tree for assignment statement */
+		// $$ = make_tree(FOR, $$, $6);
 	}
 	;
 
@@ -406,6 +432,8 @@ factor: ID
 
 int main() {
 	top_scope = scope_push(top_scope);
+	scope_insert(top_scope, "read");
+	scope_insert(top_scope, "write");
 	//fprintf(stderr, "NEW SCOPE\n");
 	yyparse();
 }
